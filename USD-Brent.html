@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0; /* Светло-серый фон */
+            color: #333;
+            margin: 0;
+            padding: 8px;
+            width: 600px; /* Ширина под 4 колонки */
+            height: 135px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* Шапка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        /* Строка котировок */
+        .rates-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            flex: 1;
+        }
+
+        /* Карточка */
+        .card {
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 6px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .title {
+            font-size: 9px;
+            color: #666;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .change {
+            font-size: 10px;
+            height: 12px;
+        }
+
+        .positive { color: #2e7d32; }
+        .negative { color: #c62828; }
+    </style>
+</head>
+<body>
+
+    <!-- Шапка -->
+    <div class="header">
+        <span id="cur-date">--</span>
+        <span id="upd-time">Обновление...</span>
+    </div>
+
+    <!-- Строка данных -->
+    <div class="rates-container">
+        
+        <!-- 1. USD -->
+        <div class="card" style="border-top: 3px solid #4c6faf;">
+            <div class="title">USD</div>
+            <div class="value" id="v-usd">--</div>
+            <div class="change" id="c-usd">--</div>
+        </div>
+
+        <!-- 2. CNY -->
+        <div class="card" style="border-top: 3px solid #be0909;">
+            <div class="title">CNY</div>
+            <div class="value" id="v-cny">--</div>
+            <div class="change" id="c-cny">--</div>
+        </div>
+
+        <!-- 3. BYN (100 RUB = X BYN) -->
+        <div class="card" style="border-top: 3px solid #4caf50;">
+            <div class="title">100 RUB =</div>
+            <div class="value" id="v-byn">--</div>
+            <div class="change" style="font-size: 9px; color: #666;">BYN</div>
+        </div>
+
+        <!-- 4. Нефть Brent (График TradingView) -->
+        <div style="width: 250px; height: 170px; background-color: #fafafa; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column;">
+    
+            <!-- Заголовок -->
+            <div style="padding: 8px 10px 2px 10px; font-family: sans-serif; font-size: 11px; color: #555; font-weight: bold; text-transform: uppercase;">
+                🛢 Нефть Brent (Неделя)
+            </div>
+            
+            <!-- График TradingView -->
+            <div class="tradingview-widget-container__widget" style="flex: 1; width: 100%;"></div>
+            
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+            {
+            "symbol": "TVC:USOIL",
+            "width": "100%",
+            "height": "100%",
+            "locale": "ru",
+            "colorTheme": "light",
+            "isTransparent": true,
+            "autosize": true,
+            "largeChartUrl": ""
+            }
+            </script>
+        </div>
+
+    </div>
+
+    <script>
+        // Утилита
+        const get = (id) => document.getElementById(id);
+        
+        function setData(id, val, change, parentId = null) {
+            const el = get(id);
+            el.innerText = val;
+            if (change && parentId) {
+                const pEl = get(parentId);
+                const cl = change >= 0 ? 'positive' : 'negative';
+                const sign = change >= 0 ? '+' : '';
+                pEl.className = 'change ' + cl;
+                pEl.innerText = sign + change.toFixed(2);
+            }
+        }
+
+        // 1. Дата (Формат 02.03.2026 - ПН)
+        function updateDate() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            
+            const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+            const dayName = days[now.getDay()];
+            
+            get('cur-date').innerText = `${day}.${month}.${year} - ${dayName}`;
+            get('upd-time').innerText = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // 2. Загрузка данных
+        async function loadAll() {
+            updateDate();
+
+            // --- Запрос к ЦБ РФ (USD, CNY) ---
+            try {
+                const cbrResp = await fetch('https://www.cbr-xml-daily.ru/daily_json.js');
+                const cbr = await cbrResp.json();
+
+                const usd = cbr.Valute.USD.Value;
+                const usdDiff = usd - cbr.Valute.USD.Previous;
+                setData('v-usd', usd.toFixed(2), usdDiff, 'c-usd');
+
+                const cny = cbr.Valute.CNY.Value;
+                const cnyDiff = cny - cbr.Valute.CNY.Previous;
+                setData('v-cny', cny.toFixed(2), cnyDiff, 'c-cny');
+
+            } catch (e) {
+                console.error("CBR Error", e);
+            }
+
+            // --- Запрос к НБ РБ (для BYN) ---
+            try {
+                const nbrbResp = await fetch('https://www.nbrb.by/api/exrates/rates?periodicity=0');
+                const nbrbRates = await nbrbResp.json();
+                
+                // Ищем RUB. Scale в НБ РБ для RUB = 100 (то есть курс дается за 100 рос. рублей)
+                const rubRate = nbrbRates.find(r => r.Cur_Abbreviation === "RUB");
+                
+                if (rubRate) {
+                    get('v-byn').innerText = rubRate.Cur_OfficialRate.toFixed(2);
+                } else {
+                    get('v-byn').innerText = "N/A";
+                }
+
+            } catch (e) {
+                console.error("NBRB Error", e);
+                get('v-byn').innerText = "Err";
+            }
+        }
+
+        loadAll();
+    </script>
+</body>
+</html>
