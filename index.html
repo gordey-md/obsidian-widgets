@@ -159,16 +159,16 @@
         async function loadAll() {
             updateDate();
 
-            // Переменные для расчетов
             let rateUsdRub = 0;
 
             // --- 1. Запрос к ЦБ РФ (USD, CNY) ---
             try {
-                const cbrResp = await fetch('https://www.cbr-xml-daily.ru/daily_json.js');
+                // Добавил параметр ?t=... чтобы обойти кэш браузера при обновлении
+                const cbrResp = await fetch('https://www.cbr-xml-daily.ru/daily_json.js?t=' + Date.now());
                 const cbr = await cbrResp.json();
 
                 const usd = cbr.Valute.USD.Value;
-                rateUsdRub = usd; // Сохраняем для расчета BYN
+                rateUsdRub = usd; 
                 const usdDiff = usd - cbr.Valute.USD.Previous;
                 setData('v-usd', usd.toFixed(2), usdDiff, 'c-usd');
 
@@ -189,7 +189,6 @@
                     const resp = await fetch(nbrbUrl);
                     nbrbRates = await resp.json();
                     
-                    // Если прямой запрос удался (работает локально)
                     const usdRateNbrb = nbrbRates.find(r => r.Cur_Abbreviation === "USD");
                     if (rateUsdRub > 0 && usdRateNbrb) {
                         const usdToByn = usdRateNbrb.Cur_OfficialRate;
@@ -197,9 +196,9 @@
                         get('v-byn').innerText = bynResult.toFixed(2);
                     }
                 } catch (errDirect) {
-                    // Если прямой запрос заблокирован (GitHub Pages), используем резервный API
+                    // Резервный API
                     const reserveUrl = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
-                    const reserveResp = await fetch(reserveUrl);
+                    const reserveResp = await fetch(reserveUrl + '?t=' + Date.now());
                     const reserveData = await reserveResp.json();
                     
                     const usdToByn = reserveData.usd.byn;
@@ -218,7 +217,18 @@
             }
         }
 
+        // === ЗАПУСК И ТАЙМЕР ===
+        
+        // 1. Сразу загружаем при открытии
         loadAll();
+
+        // 2. Ставим авто-обновление каждые 5 минут (300000 мс)
+        // Можно поставить 60000 (1 минута), но для курсов достаточно 5 мин.
+        setInterval(() => {
+            console.log("Auto-refreshing widget...");
+            loadAll();
+        }, 300000); 
+
     </script>
 </body>
 </html>
