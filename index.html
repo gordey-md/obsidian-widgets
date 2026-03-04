@@ -10,19 +10,18 @@
             color: #333;
             margin: 0;
             padding: 8px;
-            width: 600px;
-            height: 135px;
+            width: 750px; 
+            height: 220px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
         }
 
-        /* Шапка */
         .header {
             display: flex;
             justify-content: space-between;
-            font-size: 16px; /* Было 11px (+50%) */
+            font-size: 12px;
             color: #555;
             font-weight: 600;
             margin-bottom: 6px;
@@ -30,29 +29,40 @@
             border-bottom: 1px solid #ccc;
         }
 
-        /* Строка котировок */
-        .rates-container {
+        .main-container {
             display: flex;
-            justify-content: space-between;
-            gap: 6px;
-            flex: 1;
+            gap: 8px;
+            height: 200px;
         }
 
-        /* Карточка */
+        .grid-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 6px;
+            width: 65%;
+        }
+
+        .chart-area {
+            width: 35%;
+            height: 100%;
+        }
+
         .card {
             background-color: #ffffff;
             border-radius: 4px;
-            padding: 6px;
-            flex: 1;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             text-align: center;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border-top: 3px solid transparent; /* База для градиента */
         }
 
         .title {
-            font-size: 14px; /* Было 9px (+50%) */
+            font-size: 11px;
             color: #666;
             margin-bottom: 2px;
             text-transform: uppercase;
@@ -60,174 +70,297 @@
         }
 
         .value {
-            font-size: 27px; /* Было 18px (+50%) */
+            font-size: 22px;
             font-weight: 700;
             color: #000;
         }
 
         .change {
-            font-size: 15px; /* Было 10px (+50%) */
-            height: 18px;
+            font-size: 12px;
+            height: 14px;
+            margin-top: 2px;
         }
 
         .positive { color: #2e7d32; }
         .negative { color: #c62828; }
+        
+        .chart-card {
+            background-color: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Градиенты */
+        .grad-usd {
+            border-image: linear-gradient(to right, #4c6faf, #be0909) 1;
+        }
+        .grad-byn {
+            border-image: linear-gradient(to right, #4caf50, #be0909) 1;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Шапка -->
     <div class="header">
         <span id="cur-date">--</span>
-        <span id="upd-time">Обновление...</span>
+        <span id="data-actual">Данные актуальны на: --</span>
     </div>
 
-    <!-- Строка данных -->
-    <div class="rates-container">
+    <div class="main-container">
         
-        <!-- 1. USD -->
-        <div class="card" style="border-top: 3px solid #4c6faf;">
-            <div class="title">USD</div>
-            <div class="value" id="v-usd">--</div>
-            <div class="change" id="c-usd">--</div>
-        </div>
-
-        <!-- 2. CNY -->
-        <div class="card" style="border-top: 3px solid #be0909;">
-            <div class="title">CNY</div>
-            <div class="value" id="v-cny">--</div>
-            <div class="change" id="c-cny">--</div>
-        </div>
-
-        <!-- 3. BYN (100 RUB = X BYN) -->
-        <div class="card" style="border-top: 3px solid #4caf50;">
-            <div class="title">100 RUB =</div>
-            <div class="value" id="v-byn">--</div>
-            <div class="change" style="font-size: 13px; color: #666;">BYN</div>
-        </div>
-
-        <!-- 4. Нефть Brent (График TradingView) -->
-        <div style="width: 250px; height: 170px; background-color: #fafafa; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column;">
-          
-            <!-- График TradingView -->
-            <div class="tradingview-widget-container__widget" style="flex: 1; width: 100%;"></div>
+        <!-- === ЛЕВАЯ ЧАСТЬ (Сетка) === -->
+        <div class="grid-area">
             
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {
+            <!-- 1. USD -->
+            <div class="card grad-usd">
+                <div class="title">USD/RUB</div>
+                <div class="value" id="v-usd">--</div>
+                <div class="change" id="c-usd">--</div>
+            </div>
+
+            <!-- 2. EUR -->
+            <div class="card" style="border-top: 3px solid #3f51b5;">
+                <div class="title">EUR/RUB</div>
+                <div class="value" id="v-eur">--</div>
+                <div class="change" id="c-eur">--</div>
+            </div>
+
+            <!-- 3. CNY -->
+            <div class="card" style="border-top: 3px solid #be0909;">
+                <div class="title">CNY/RUB</div>
+                <div class="value" id="v-cny">--</div>
+                <div class="change" id="c-cny">--</div>
+            </div>
+
+            <!-- 4. BYN -->
+            <div class="card grad-byn">
+                <div class="title">100RUB/BYN</div>
+                <div class="value" id="v-byn">--</div>
+                <div class="change" id="c-byn">--</div>
+            </div>
+
+            <!-- 5. GOLD -->
+            <div class="card" style="border-top: 3px solid #ffc107;">
+                <div class="title">GOLD/USD</div>
+                <div class="value" id="v-xau">--</div>
+                <div class="change" id="c-xau">--</div>
+            </div>
+
+            <!-- 6. BTC -->
+            <div class="card" style="border-top: 3px solid #f7931a;">
+                <div class="title">BTC/USD</div>
+                <div class="value" id="v-btc">--</div>
+                <div class="change" id="c-btc">--</div>
+            </div>
+
+        </div>
+
+        <!-- === ПРАВАЯ ЧАСТЬ (График) === -->
+        <div class="chart-area">
+            <div class="chart-card" style="border-top: 3px solid #ff9800;">
+                <!-- Убран заголовок BRENT -->
+                <div class="chart-content" id="tv-brent"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- СКРИПТЫ -->
+    
+    <!-- 1. График -->
+    <script type="text/javascript">
+        const container = document.getElementById('tv-brent');
+        container.innerHTML = `<div class="tradingview-widget-container__widget" style="height:100%; width:100%;"></div>`;
+        const script = document.createElement('script');
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+        script.async = true;
+        script.innerHTML = JSON.stringify({
             "symbol": "TVC:UKOIL",
             "width": "100%",
             "height": "100%",
             "locale": "ru",
             "colorTheme": "light",
             "isTransparent": true,
-            "autosize": true,
-            "largeChartUrl": ""
-            }
-            </script>
-        </div>
+            "autosize": true
+        });
+        container.querySelector('.tradingview-widget-container__widget').appendChild(script);
+    </script>
 
-    </div>
-
+    <!-- 2. Данные -->
     <script>
         const get = (id) => document.getElementById(id);
         
-        function setData(id, val, change, parentId = null) {
+        function setDataPercent(id, val, changePercent, parentId = null) {
             const el = get(id);
             el.innerText = val;
-            if (change && parentId) {
+            if (changePercent !== null && parentId) {
                 const pEl = get(parentId);
-                const cl = change >= 0 ? 'positive' : 'negative';
-                const sign = change >= 0 ? '+' : '';
+                const cl = changePercent >= 0 ? 'positive' : 'negative';
+                const sign = changePercent >= 0 ? '+' : '';
                 pEl.className = 'change ' + cl;
-                pEl.innerText = sign + change.toFixed(2);
+                pEl.innerText = sign + changePercent.toFixed(2) + '%';
             }
         }
 
-        function updateDate() {
+        function updateHeader() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
-            
             const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
             const dayName = days[now.getDay()];
+            const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             
-            get('cur-date').innerText = `${day}.${month}.${year} - ${dayName}`;
-            get('upd-time').innerText = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            get('cur-date').innerText = `${day}.${month}.${year} - ${dayName} ${time}`;
+        }
+
+        // Формирование версии даты API: YYYY.M.D
+        function getApiVersionDate(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = dateObj.getMonth() + 1;
+            const d = dateObj.getDate();
+            return `${y}.${m}.${d}`;
+        }
+
+        // Форматирование даты для вывода "Данные от..."
+        function formatDateRu(dateObj) {
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            return `${day}.${month}`;
         }
 
         async function loadAll() {
-            updateDate();
-
+            updateHeader();
             let rateUsdRub = 0;
 
-            // --- 1. Запрос к ЦБ РФ (USD, CNY) ---
+            // --- 1. ЦБ РФ (Верхняя строка) ---
             try {
-                // Добавил параметр ?t=... чтобы обойти кэш браузера при обновлении
                 const cbrResp = await fetch('https://www.cbr-xml-daily.ru/daily_json.js?t=' + Date.now());
                 const cbr = await cbrResp.json();
 
                 const usd = cbr.Valute.USD.Value;
-                rateUsdRub = usd; 
-                const usdDiff = usd - cbr.Valute.USD.Previous;
-                setData('v-usd', usd.toFixed(2), usdDiff, 'c-usd');
+                const usdPrev = cbr.Valute.USD.Previous;
+                rateUsdRub = usd;
+                const usdPercent = ((usd - usdPrev) / usdPrev) * 100;
+                setDataPercent('v-usd', usd.toFixed(2), usdPercent, 'c-usd');
+
+                const eur = cbr.Valute.EUR.Value;
+                const eurPrev = cbr.Valute.EUR.Previous;
+                const eurPercent = ((eur - eurPrev) / eurPrev) * 100;
+                setDataPercent('v-eur', eur.toFixed(2), eurPercent, 'c-eur');
 
                 const cny = cbr.Valute.CNY.Value;
-                const cnyDiff = cny - cbr.Valute.CNY.Previous;
-                setData('v-cny', cny.toFixed(2), cnyDiff, 'c-cny');
+                const cnyPrev = cbr.Valute.CNY.Previous;
+                const cnyPercent = ((cny - cnyPrev) / cnyPrev) * 100;
+                setDataPercent('v-cny', cny.toFixed(2), cnyPercent, 'c-cny');
 
             } catch (e) {
                 console.error("CBR Error", e);
             }
 
-            // --- 2. Расчет BYN (Кросс-курс) ---
+            // --- 2. API (Нижняя строка) ---
+            const today = new Date();
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            const dayBefore = new Date(); dayBefore.setDate(dayBefore.getDate() - 2);
+
+            const verToday = getApiVersionDate(today);
+            const verYesterday = getApiVersionDate(yesterday);
+            const verDayBefore = getApiVersionDate(dayBefore);
+
+            let dataToday = null;
+            let dataYesterday = null;
+            let actualDateStr = "";
+
             try {
-                const nbrbUrl = 'https://www.nbrb.by/api/exrates/rates?periodicity=0';
+                // Попытка 1: Сегодня + Вчера
+                const urlToday = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${verToday}/v1/currencies/usd.json`;
+                const urlYesterday = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${verYesterday}/v1/currencies/usd.json`;
+
+                const respToday = await fetch(urlToday);
                 
-                let nbrbRates;
+                if (respToday.ok) {
+                    const respYesterday = await fetch(urlYesterday);
+                    dataToday = await respToday.json();
+                    dataYesterday = await respYesterday.json();
+                    actualDateStr = formatDateRu(today);
+                } else {
+                    throw new Error("Today not ready");
+                }
+            } catch (e) {
+                // Попытка 2 (Fallback): Вчера + Позавчера
                 try {
-                    const resp = await fetch(nbrbUrl);
-                    nbrbRates = await resp.json();
+                    const urlY = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${verYesterday}/v1/currencies/usd.json`;
+                    const urlDB = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${verDayBefore}/v1/currencies/usd.json`;
                     
-                    const usdRateNbrb = nbrbRates.find(r => r.Cur_Abbreviation === "USD");
-                    if (rateUsdRub > 0 && usdRateNbrb) {
-                        const usdToByn = usdRateNbrb.Cur_OfficialRate;
-                        const bynResult = (usdToByn / rateUsdRub) * 100;
-                        get('v-byn').innerText = bynResult.toFixed(2);
+                    const respY = await fetch(urlY);
+                    const respDB = await fetch(urlDB);
+
+                    if (respY.ok && respDB.ok) {
+                        dataToday = await respY.json();
+                        dataYesterday = await respDB.json();
+                        actualDateStr = formatDateRu(yesterday);
                     }
-                } catch (errDirect) {
-                    // Резервный API
-                    const reserveUrl = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
-                    const reserveResp = await fetch(reserveUrl + '?t=' + Date.now());
-                    const reserveData = await reserveResp.json();
-                    
-                    const usdToByn = reserveData.usd.byn;
-                    
-                    if (rateUsdRub > 0 && usdToByn) {
-                        const bynResult = (usdToByn / rateUsdRub) * 100;
-                        get('v-byn').innerText = bynResult.toFixed(2);
-                    } else {
-                        get('v-byn').innerText = "N/A";
-                    }
+                } catch (err) {
+                    console.error("Fallback failed", err);
+                }
+            }
+
+            // Обработка данных
+            if (dataToday && dataYesterday) {
+                const latestUsd = dataToday.usd;
+                const prevUsd = dataYesterday.usd;
+
+                get('data-actual').innerText = `Данные актуальны на: ${actualDateStr}`;
+
+                // BYN
+                if (rateUsdRub > 0 && latestUsd.byn && prevUsd.byn) {
+                    const currentByn = (latestUsd.byn / rateUsdRub) * 100;
+                    const prevBynCoeff = prevUsd.byn;
+                    const currentBynCoeff = latestUsd.byn;
+                    let bynPercent = 0;
+                    if (prevBynCoeff !== 0) bynPercent = ((currentBynCoeff - prevBynCoeff) / prevBynCoeff) * 100;
+                    setDataPercent('v-byn', currentByn.toFixed(2), bynPercent, 'c-byn');
                 }
 
-            } catch (e) {
-                console.error("BYN Calculation Error", e);
-                get('v-byn').innerText = "Err";
+                // GOLD
+                if (latestUsd.xau && prevUsd.xau) {
+                    const currentGold = 1 / latestUsd.xau;
+                    const prevGold = 1 / prevUsd.xau;
+                    let goldPercent = 0;
+                    if (prevGold !== 0) goldPercent = ((currentGold - prevGold) / prevGold) * 100;
+                    setDataPercent('v-xau', currentGold.toFixed(0), goldPercent, 'c-xau');
+                }
+
+                // BITCOIN
+                if (latestUsd.btc && prevUsd.btc) {
+                    const currentBtc = 1 / latestUsd.btc;
+                    const prevBtc = 1 / prevUsd.btc;
+                    let btcPercent = 0;
+                    if (prevBtc !== 0) btcPercent = ((currentBtc - prevBtc) / prevBtc) * 100;
+
+                    get('v-btc').innerText = (currentBtc / 1000).toFixed(1) + "k";
+                    
+                    const pEl = get('c-btc');
+                    const cl = btcPercent >= 0 ? 'positive' : 'negative';
+                    const sign = btcPercent >= 0 ? '+' : '';
+                    pEl.className = 'change ' + cl;
+                    pEl.innerText = sign + btcPercent.toFixed(2) + '%';
+                }
             }
         }
 
-        // === ЗАПУСК И ТАЙМЕР ===
-        
-        // 1. Сразу загружаем при открытии
         loadAll();
-
-        // 2. Ставим авто-обновление каждые 5 минут (300000 мс)
-        // Можно поставить 60000 (1 минута), но для курсов достаточно 5 мин.
-        setInterval(() => {
-            console.log("Auto-refreshing widget...");
-            loadAll();
-        }, 300000); 
+        setInterval(loadAll, 1800000);
 
     </script>
 </body>
