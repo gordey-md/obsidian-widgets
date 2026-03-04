@@ -10,7 +10,8 @@
             color: #333;
             margin: 0;
             padding: 8px;
-            width: 750px; 
+            /* Расчет ширины: 3*100 (ячейки) + 350 (график) + 8px*2 (padding) + 14px (gaps) = 680px */
+            width: 680px; 
             height: 220px;
             overflow: hidden;
             display: flex;
@@ -37,14 +38,14 @@
 
         .grid-area {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 100px 100px 100px; /* Фиксированная ширина ячеек */
             grid-template-rows: 1fr 1fr;
             gap: 6px;
-            width: 65%;
+            /* width убран, используется auto */
         }
 
         .chart-area {
-            width: 35%;
+            width: 350px; /* Фиксированная ширина графика */
             height: 100%;
         }
 
@@ -58,7 +59,7 @@
             align-items: center;
             text-align: center;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            border-top: 3px solid transparent; /* База для градиента */
+            border-top: 3px solid transparent;
         }
 
         .title {
@@ -168,7 +169,6 @@
         <!-- === ПРАВАЯ ЧАСТЬ (График) === -->
         <div class="chart-area">
             <div class="chart-card" style="border-top: 3px solid #ff9800;">
-                <!-- Убран заголовок BRENT -->
                 <div class="chart-content" id="tv-brent"></div>
             </div>
         </div>
@@ -224,7 +224,6 @@
             get('cur-date').innerText = `${day}.${month}.${year} - ${dayName} ${time}`;
         }
 
-        // Формирование версии даты API: YYYY.M.D
         function getApiVersionDate(dateObj) {
             const y = dateObj.getFullYear();
             const m = dateObj.getMonth() + 1;
@@ -232,7 +231,6 @@
             return `${y}.${m}.${d}`;
         }
 
-        // Форматирование даты для вывода "Данные от..."
         function formatDateRu(dateObj) {
             const day = String(dateObj.getDate()).padStart(2, '0');
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
